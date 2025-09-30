@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "NodeNext",           // ✅ Required for ESM interop
+    "moduleResolution": "NodeNext", // ✅ Resolves ESM packages correctly
+    "outDir": "dist",
+    "rootDir": "src",
+    "strict": true,
+    "esModuleInterop": true,        // ✅ Plays nice with ESM/CJS mixtures
+    "skipLibCheck": true,           // ✅ Avoids noisy type conflicts
+    "types": ["node"],              // ✅ Force Node typings (prevents require clashes)
+    "resolveJsonModule": true
+  },
+  "include": ["src"]
+}

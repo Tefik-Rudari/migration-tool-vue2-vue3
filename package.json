@@ -1,0 +1,33 @@
+{
+  "name": "vue23-migrate-tool",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "v23-migrate": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev": "node --loader ts-node/esm src/index.ts"
+  },
+  "dependencies": {
+    "@babel/parser": "^7.25.0",
+    "@vue/compiler-sfc": "^3.5.0",
+    "chalk": "^5.3.0",
+    "commander": "^10.0.1",
+    "execa": "^7.2.0",
+    "globby": "13.2.2",
+    "ora": "^6.3.1",
+    "prettier": "^3.3.3",
+    "prompts": "^2.4.2",
+    "recast": "^0.23.9",
+    "semver": "^7.6.3",
+    "node-fetch": "^3.3.2"
+  },
+  "devDependencies": {
+    "@types/node": "^24.2.1",
+    "@types/prompts": "^2.4.9",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.5.4"
+  }
+}
