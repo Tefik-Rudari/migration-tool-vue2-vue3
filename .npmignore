@@ -1,0 +1,34 @@
+# Source files
+src/
+*.ts
+!*.d.ts
+tsconfig.json
+
+# Development files
+.git/
+.github/
+node_modules/
+*.log
+*.lock
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Testing
+test/
+tests/
+*.test.js
+*.spec.js
+coverage/
+
+# Misc
+.DS_Store
+.env
+.env.*
+*.md
+!README.md
+!LICENSE.md
+!MIGRATION_RULES.md

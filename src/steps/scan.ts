@@ -39,6 +39,32 @@ export async function scan(ctx: RunContext) {
   const files = await globby(["src/**/*.{vue,ts,js}"], { gitignore: true });
   console.log("🗂  Source files found:", files.length);
 
+  // Detect build tool
+  let buildTool: "vite" | "webpack" | "vue-cli" | "unknown" = "unknown";
+  const hasViteConfig = fs.existsSync(path.join(root, "vite.config.js")) || fs.existsSync(path.join(root, "vite.config.ts"));
+  const hasVueConfig = fs.existsSync(path.join(root, "vue.config.js"));
+
+  if (deps["vite"] || hasViteConfig) buildTool = "vite";
+  else if (deps["@vue/cli-service"] || hasVueConfig) buildTool = "vue-cli";
+  else if (deps["webpack"]) buildTool = "webpack";
+
+  // Detect TypeScript
+  const hasTypeScript = !!(deps["typescript"] || fs.existsSync(path.join(root, "tsconfig.json")));
+
+  // Find main entry point
+  let hasMainJs = "";
+  const mainPaths = ["src/main.ts", "src/main.js", "main.ts", "main.js"];
+  for (const p of mainPaths) {
+    if (fs.existsSync(path.join(root, p))) {
+      hasMainJs = p;
+      break;
+    }
+  }
+
+  console.log("🔧 Build tool:", chalk.bold(buildTool));
+  console.log("📘 TypeScript:", hasTypeScript ? "Yes" : "No");
+  if (hasMainJs) console.log("🚪 Entry point:", chalk.bold(hasMainJs));
+
   const blockers: string[] = [];
   if (typeof vuetify === "string" && /^2\./.test(vuetify)) {
     blockers.push("Vuetify 2 detected → run Vuetify migration after core Vue 3 migration.");
@@ -47,5 +73,18 @@ export async function scan(ctx: RunContext) {
     console.log(chalk.yellow("ℹ️  Vue is not 2.x; core migration may be partially applied or different."));
   }
 
-  ctx.scan = { files, deps, blockers, vue, router, vuex, vuetify };
+  ctx.scan = {
+    files,
+    deps,
+    blockers,
+    vue,
+    router,
+    vuex,
+    vuetify,
+    buildTool,
+    hasTypeScript,
+    hasMainJs,
+    hasVueConfig,
+    hasViteConfig
+  };
 }

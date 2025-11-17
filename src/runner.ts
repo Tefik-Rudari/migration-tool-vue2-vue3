@@ -7,24 +7,46 @@ import { aiCodemods } from "./steps/ai-codemods.js";
 import chalk from "chalk";
 
 export async function runAll(ctx: RunContext) {
-  const steps: Step[] = [
+  const allSteps: Step[] = [
     { name: "Preflight", description: "Verify git state, current branch.", run: preflight },
     { name: "Scan", description: "Detect Vue/Router/Vuex/Vuetify versions, list files, find blockers.", run: scan },
-    { name: "Update Dependencies", description: "Bump to Vue 3 core deps and install. Optionally add @vue/compat.", run: updateDeps },
+    { name: "Update Dependencies", description: "Bump to Vue 3 core deps and install. Optionally add @vue/compat.", run: updateDeps, optional: true },
   ];
 
   const lname = (s: Step) => s.name.toLowerCase();
+  const normalizeStepName = (name: string) => name.toLowerCase().replace(/\s+/g, "-");
 
-  const onlyIdx = ctx.only ? steps.findIndex(s => lname(s) === ctx.only!.toLowerCase()) : -1;
-  const fromIdx = ctx.from ? steps.findIndex(s => lname(s) === ctx.from!.toLowerCase()) : 0;
-  const toIdx = ctx.to ? steps.findIndex(s => lname(s) === ctx.to!.toLowerCase()) : steps.length - 1;
+  // Filter steps based on --skip and --only flags
+  let steps = allSteps;
 
-  const start = onlyIdx >= 0 ? onlyIdx : Math.max(0, fromIdx >= 0 ? fromIdx : 0);
-  const end = onlyIdx >= 0 ? onlyIdx : Math.min(steps.length - 1, toIdx >= 0 ? toIdx : steps.length - 1);
+  if (ctx.onlySteps && ctx.onlySteps.length > 0) {
+    const onlyNames = ctx.onlySteps.map(s => normalizeStepName(s));
+    steps = steps.filter(s => onlyNames.includes(normalizeStepName(s.name)));
+    console.log(chalk.cyan(`\n📋 Only running: ${steps.map(s => s.name).join(", ")}`));
+  } else if (ctx.skipSteps && ctx.skipSteps.length > 0) {
+    const skipNames = ctx.skipSteps.map(s => normalizeStepName(s));
+    steps = steps.filter(s => !skipNames.includes(normalizeStepName(s.name)));
+    console.log(chalk.cyan(`\n⏭️  Skipping: ${ctx.skipSteps.join(", ")}`));
+  }
+
+  // Filter by shouldRun condition
+  const stepsToRun: Step[] = [];
+  for (const step of steps) {
+    if (step.shouldRun) {
+      const should = await step.shouldRun(ctx);
+      if (should) stepsToRun.push(step);
+      else console.log(chalk.gray(`⏭️  Skipping ${step.name} (condition not met)`));
+    } else {
+      stepsToRun.push(step);
+    }
+  }
+
+  const start = 0;
+  const end = stepsToRun.length - 1;
 
   for (let i = start; i <= end; i++) {
-    const s = steps[i];
-    banner(`Step ${i + 1} of ${steps.length}: ${s.name}`);
+    const s = stepsToRun[i];
+    banner(`Step ${i + 1} of ${stepsToRun.length}: ${s.name}`);
     console.log(chalk.gray(s.description));
 
     const ok = await confirmContinue(`Proceed with "${s.name}"?`, ctx.nonInteractive);

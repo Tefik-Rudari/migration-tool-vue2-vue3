@@ -1,28 +1,53 @@
 {
-  "name": "vue23-migrate-tool",
-  "version": "0.1.0",
-  "private": true,
+  "name": "vue3-migration-tool",
+  "version": "1.0.0",
+  "description": "AI-powered Vue 2 to Vue 3 migration tool with Vuetify 3 support",
   "type": "module",
-  "bin": {
-    "v23-migrate": "./dist/index.js"
+  "keywords": [
+    "vue",
+    "vue3",
+    "migration",
+    "codemod",
+    "vuetify",
+    "ai",
+    "automation"
+  ],
+  "author": "tefikrudari",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Tefik-Rudari/migration-tool-vue2-vue3.git"
   },
+  "bugs": {
+    "url": "https://github.com/Tefik-Rudari/migration-tool-vue2-vue3/issues"
+  },
+  "homepage": "https://github.com/Tefik-Rudari/migration-tool-vue2-vue3#readme",
+  "bin": {
+    "vue3-migrate": "./dist/index.js"
+  },
+  "files": [
+    "dist",
+    "MIGRATION_RULES.md"
+  ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "dev": "node --loader ts-node/esm src/index.ts"
+    "dev": "node --loader ts-node/esm src/index.ts",
+    "prepublishOnly": "npm run build"
   },
   "dependencies": {
     "@babel/parser": "^7.25.0",
     "@vue/compiler-sfc": "^3.5.0",
     "chalk": "^5.3.0",
     "commander": "^10.0.1",
+    "dotenv": "^17.2.3",
     "execa": "^7.2.0",
     "globby": "13.2.2",
+    "node-fetch": "^3.3.2",
     "ora": "^6.3.1",
     "prettier": "^3.3.3",
     "prompts": "^2.4.2",
     "recast": "^0.23.9",
-    "semver": "^7.6.3",
-    "node-fetch": "^3.3.2"
+    "semver": "^7.6.3"
   },
   "devDependencies": {
     "@types/node": "^24.2.1",

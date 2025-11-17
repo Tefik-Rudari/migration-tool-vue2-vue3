@@ -129,11 +129,35 @@ export async function aiRewriteFile(
     ? input.code.slice(0, MAX_CHARS) + "\n/* ...file truncated for AI... */"
     : input.code;
 
-  const rulesPath = process.env.MIGRATION_RULES_PATH || path.resolve(process.cwd(), 'migrate-tool/MIGRATION_RULES.md');
+  // Try to find MIGRATION_RULES.md in this order:
+  // 1. ctx.rulesPath (user provided via --rules flag)
+  // 2. MIGRATION_RULES_PATH env var (legacy support)
+  // 3. Project root MIGRATION_RULES.md
+  // 4. Package's built-in MIGRATION_RULES.md (from node_modules/vue23-migrate-tool/)
+  const possiblePaths = [
+    ctx.rulesPath,
+    process.env.MIGRATION_RULES_PATH,
+    path.resolve(process.cwd(), 'MIGRATION_RULES.md'),
+    path.resolve(process.cwd(), 'migrate-tool/MIGRATION_RULES.md'),
+    // Built-in rules (when installed as package)
+    path.resolve(__dirname, '../../MIGRATION_RULES.md'),
+  ].filter(Boolean) as string[];
+
   let rulesText = '';
-  try {
-    rulesText = fs.readFileSync(rulesPath, 'utf8');
-  } catch { }
+  let rulesPath = '';
+  for (const p of possiblePaths) {
+    try {
+      rulesText = fs.readFileSync(p, 'utf8');
+      rulesPath = p;
+      break;
+    } catch { }
+  }
+
+  if (!rulesText) {
+    console.warn('⚠️  No MIGRATION_RULES.md found. Using built-in prompt only.');
+  } else {
+    console.log(`📖 Using migration rules: ${path.basename(rulesPath)}`);
+  }
 
   // Allow a lighter, faster prompt by sending a subset of the rules most relevant to the current file.
   // Set AI_RULES_MODE=full to send the entire file.

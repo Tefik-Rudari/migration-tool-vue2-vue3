@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 import { Command } from "commander";
 import { runAll } from "./runner.js";
 import { aiCodemods } from "./steps/ai-codemods.js";
@@ -20,12 +22,14 @@ if (rulesArg) {
 const program = new Command();
 
 program
-  .name("v23-migrate")
+  .name("vue3-migrate")
   .description("Vue 2 → Vue 3 migration tool (multi-step, interactive)")
   .option("--dry-run", "Plan only; do not write files or install packages")
   .option("--no-compat", "Do NOT add @vue/compat migration build")
   .option("--yes", "Non-interactive: auto-continue all prompts")
-  .option("--rules <path>", "Path to MIGRATION_RULES.md (used by AI layer)")
+  .option("--rules <path>", "Path to custom MIGRATION_RULES.md (defaults to built-in)")
+  .option("--skip <steps>", "Skip specific steps (comma-separated: preflight,deps,vite)")
+  .option("--only <steps>", "Only run specific steps (comma-separated)")
   .action(async (opts) => {
     const ctx: RunContext & any = {
       root: process.cwd(),
@@ -33,6 +37,9 @@ program
       dryRun: !!opts.dryRun,
       compat: opts.compat !== false,
       nonInteractive: !!opts.yes,
+      rulesPath: opts.rules,
+      skipSteps: opts.skip ? opts.skip.split(",").map((s: string) => s.trim()) : undefined,
+      onlySteps: opts.only ? opts.only.split(",").map((s: string) => s.trim()) : undefined,
       scan: undefined,
     };
     await runAll(ctx);
