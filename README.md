@@ -1,26 +1,24 @@
-# Vue 2 → Vue 3 Migration Tool
+# Vue 3 Migration Tool
 
-AI-powered CLI tool to help migrate Vue 2 projects to Vue 3, with support for Vue Router, Vuex, Vuetify, and more.
+AI-powered CLI tool to migrate Vue 2 projects to Vue 3, with support for Vue Router, Vuex, and Vuetify.
 
 ## Features
 
-- 🤖 **AI-Powered Codemods**: Automatically rewrite Vue components using OpenAI
-- 🔍 **Smart Detection**: Identifies your build tool (Vite/Webpack/Vue CLI), package manager, and dependencies
-- 📦 **Dependency Management**: Updates 30+ packages to Vue 3 compatible versions
-- ⚙️ **Modular Steps**: Run only what you need with `--skip` and `--only` flags
-- 📋 **Custom Rules**: Bring your own migration rules or use built-in ones
-- 🎯 **Vuetify 3 Support**: Special handling for Vuetify 2 → 3 migrations
-- 🔒 **Git Safe**: Checks git status, creates backups before changes
+- AI-powered component transformations using OpenAI
+- Smart project detection (build tool, TypeScript, dependencies)
+- Automatic dependency updates (30+ packages)
+- Modular steps with `--skip` and `--only` flags
+- Custom migration rules support
+- Vuetify 2 → 3 migrations
+- Git safety checks and backups
 
 ## Prerequisites
 
-- **Node.js**: 16+ (Vue 3 requirement)
-- **Git**: Project must be in a git repository
-- **OpenAI API Key**: Required for AI codemods (optional for dependency updates)
+- Node.js 16+
+- Git repository
+- OpenAI API key (for AI codemods)
 
 ## Quick Start
-
-Run directly with npx (no installation needed):
 
 ```bash
 npx vue3-migration-tool
@@ -35,74 +33,49 @@ vue3-migrate
 
 ## Configuration
 
-### 1. OpenAI API Key (Required for AI Codemods)
-
-The tool uses OpenAI for intelligent code transformations. Set your API key:
+### OpenAI API Key (Required for AI Features)
 
 ```bash
-# Option 1: Environment variable (recommended)
+# Environment variable
 export OPENAI_API_KEY="sk-..."
 
-# Option 2: .env file in your project root
+# Or create .env file in your project root
 echo "OPENAI_API_KEY=sk-..." > .env
 ```
 
-Get your API key from: https://platform.openai.com/api-keys
+Get your API key: https://platform.openai.com/api-keys
 
-### 2. AI Model Configuration (Optional)
-
-Choose which OpenAI model to use:
+### Choose AI Model (Optional)
 
 ```bash
 # Default: gpt-4o-mini (fast, cost-effective)
 export OPENAI_MODEL="gpt-4o-mini"
 
-# For higher quality: gpt-4o or gpt-4-turbo
+# Better quality: gpt-4o
 export OPENAI_MODEL="gpt-4o"
 ```
 
-**Model Recommendations:**
-- `gpt-4o-mini`: Fast and cheap, good for most projects (~$0.15 per 1M input tokens)
-- `gpt-4o`: Better quality, more expensive (~$5 per 1M input tokens)
-- `gpt-4-turbo`: Balanced performance and cost
-
-### 3. Custom Migration Rules (Optional)
-
-The tool includes comprehensive migration rules. To customize:
+### Custom Migration Rules (Optional)
 
 ```bash
-# Use your own rules file
-vue3-migrate --rules ./my-migration-rules.md
-
-# Or set environment variable
-export MIGRATION_RULES_PATH="./my-rules.md"
+vue3-migrate --rules ./my-rules.md
 ```
-
-**Rules Discovery Order:**
-1. `--rules` CLI flag
-2. `MIGRATION_RULES_PATH` environment variable
-3. `MIGRATION_RULES.md` in project root
-4. Built-in package rules (fallback)
 
 ## Usage
 
 ### Basic Migration
 
-Run all steps interactively:
-
 ```bash
 vue3-migrate
 ```
 
-This will:
-1. ✅ Check git status and current branch
-2. 🔍 Scan project and detect versions
-3. 📦 Update dependencies to Vue 3
-4. 🤖 Offer AI codemods (optional)
+Steps:
+1. Check git status and current branch
+2. Scan project and detect versions
+3. Update dependencies to Vue 3
+4. Offer AI codemods (optional)
 
 ### AI Codemods Only
-
-Migrate specific files or folders:
 
 ```bash
 # Migrate entire src directory
@@ -115,62 +88,29 @@ vue3-migrate ai src/App.vue src/components/
 vue3-migrate ai src/ --mode auto --commit --dry-run
 ```
 
-**AI Codemod Options:**
-- `--mode <mode>`: How to apply changes
-  - `auto`: Apply automatically (default)
-  - `ask`: Prompt for each file
-  - `report`: Show changes without applying
-- `--commit`: Git commit each changed file
-- `--dry-run`: Show what would change without writing
-- `--max-lines <n>`: Skip patches larger than N lines (default: 400)
-- `--min-confidence <n>`: Minimum confidence threshold 0-1
-- `--rules <path>`: Custom migration rules file
-
 ### Selective Step Execution
 
-Skip or run specific steps:
-
 ```bash
-# Skip dependency updates (just scan)
+# Skip dependency updates
 vue3-migrate --skip update-dependencies
 
-# Only run scan step
+# Only run scan
 vue3-migrate --only scan
 
 # Skip multiple steps
 vue3-migrate --skip preflight,update-dependencies
 ```
 
-**Available Steps:**
-- `preflight`: Git checks and project validation
-- `scan`: Detect versions, build tool, TypeScript
-- `update-dependencies`: Update package.json and install
-
-### Dry Run Mode
-
-Preview changes without modifying files:
+### Other Options
 
 ```bash
-# See what would change
+# Preview changes without modifying files
 vue3-migrate --dry-run
 
-# Test AI codemods
-vue3-migrate ai src/ --dry-run
-```
-
-### Non-Interactive Mode
-
-Auto-accept all prompts:
-
-```bash
+# Auto-accept all prompts
 vue3-migrate --yes
-```
 
-### Disable @vue/compat
-
-Skip adding the Vue 3 compatibility build:
-
-```bash
+# Skip @vue/compat
 vue3-migrate --no-compat
 ```
 
@@ -182,14 +122,14 @@ vue3-migrate --no-compat
 vue3-migrate [options]
 ```
 
-**Options:**
-- `--dry-run`: Preview changes without writing files
-- `--no-compat`: Don't add @vue/compat migration build
-- `--yes`: Non-interactive mode (auto-accept prompts)
-- `--rules <path>`: Path to custom MIGRATION_RULES.md
-- `--skip <steps>`: Skip steps (comma-separated)
-- `--only <steps>`: Only run these steps (comma-separated)
-- `-h, --help`: Show help
+Options:
+- `--dry-run` - Preview changes without writing files
+- `--no-compat` - Don't add @vue/compat migration build
+- `--yes` - Non-interactive mode
+- `--rules <path>` - Path to custom MIGRATION_RULES.md
+- `--skip <steps>` - Skip steps (comma-separated)
+- `--only <steps>` - Only run these steps
+- `-h, --help` - Show help
 
 ### AI Subcommand
 
@@ -197,253 +137,123 @@ vue3-migrate [options]
 vue3-migrate ai [targets...] [options]
 ```
 
-**Arguments:**
-- `[targets...]`: Files or folders to migrate (default: `src/`)
+Options:
+- `--mode <mode>` - auto|ask|report (default: auto)
+- `--commit` - Git commit each changed file
+- `--max-lines <n>` - Skip patches larger than N lines (default: 400)
+- `--min-confidence <n>` - Confidence threshold 0-1
+- `--dry-run` - Preview without writing
+- `--rules <path>` - Custom migration rules
 
-**Options:**
-- `--mode <mode>`: auto|ask|report (default: auto)
-- `--commit`: Git commit each changed file
-- `--max-lines <n>`: Skip large patches (default: 400)
-- `--min-confidence <n>`: Confidence threshold 0-1
-- `--verify-retries <n>`: Number of verification retries
-- `--dry-run`: Preview without writing
-- `--rules <path>`: Custom migration rules
+## Migration Steps
 
-## Migration Steps Explained
+### 1. Preflight
+- Confirms project is in a git repository
+- Shows current branch
+- Warns about uncommitted changes
 
-### Step 1: Preflight
+### 2. Scan
+Detects:
+- Package manager (npm, yarn, pnpm)
+- Build tool (Vite, Vue CLI, Webpack)
+- TypeScript usage
+- Dependencies (Vue, Router, Vuex, Vuetify)
+- Entry point (main.js/main.ts)
+- Potential blockers
 
-Validates your environment:
-- ✅ Confirms project is in a git repository
-- 📋 Shows current branch
-- ⚠️ Warns about uncommitted changes
+### 3. Update Dependencies
+- Updates Vue core packages
+- Updates build tools and testing frameworks
+- Removes Vue 2-only packages
+- Creates package.json backup
 
-**Why?** Ensures you can rollback if needed.
-
-### Step 2: Scan
-
-Detects your project configuration:
-- 📦 **Package Manager**: npm, yarn, or pnpm
-- 🔧 **Build Tool**: Vite, Vue CLI, Webpack, or custom
-- 📘 **TypeScript**: Detected or not
-- 📦 **Dependencies**: Vue, Vue Router, Vuex, Vuetify versions
-- 🚪 **Entry Point**: Locates main.js/main.ts
-- ⚠️ **Blockers**: Identifies potential migration issues
-
-**Example Output:**
-```
-📦 Package manager: npm
-🔗 Detected versions:
-  • vue: ^2.7.14
-  • vue-router: ^3.6.5
-  • vuex: ^3.6.2
-  • vuetify: ^2.6.10
-🗂  Source files found: 142
-🔧 Build tool: vue-cli
-📘 TypeScript: Yes
-🚪 Entry point: src/main.ts
-```
-
-### Step 3: Update Dependencies
-
-Updates your package.json:
-- ⬆️ **Vue Core**: vue@3.5.18, vue-router@^4.4.0, vuex@^4.1.0
-- 🔧 **Build Tools**: @vue/cli-service@^5.0.0 (if using Vue CLI)
-- 🎨 **Vuetify**: Upgrades to v3.7.0
-- 🧪 **Testing**: Updates Jest, vue-jest → @vue/vue3-jest
-- 🗑️ **Removes**: Vue 2-only packages (vue-template-compiler, etc.)
-- 💾 **Backup**: Creates timestamped package.json backup
-
-**Optional**: Adds `@vue/compat` for gradual migration.
-
-### Step 4: AI Codemods (Optional)
-
-Uses OpenAI to rewrite components:
-- 🤖 **Script Migration**: Converts to `<script setup lang="ts">`
-- 🎨 **Template Updates**: Vuetify 2 → 3 components
-- 📊 **Confidence Scoring**: Each change has confidence rating
-- ⏱️ **Time Estimates**: Shows progress with time remaining
-- ✅ **Verification**: Validates syntax before writing
+### 4. AI Codemods (Optional)
+- Converts to `<script setup lang="ts">`
+- Updates Vuetify 2 → 3 components
+- Provides confidence scoring
+- Validates syntax before writing
 
 ## Examples
 
-### Example 1: First-Time Migration
+### First-Time Migration
 
 ```bash
-# Set API key
 export OPENAI_API_KEY="sk-..."
-
-# Run full migration
 npx vue3-migration-tool
-
-# Review changes, then test
 npm run dev
 ```
 
-### Example 2: Incremental Migration
+### Incremental Migration
 
 ```bash
-# Just update dependencies
+# Update dependencies only
 vue3-migrate --skip ai
 
-# Later, migrate one folder at a time
+# Migrate one folder at a time
 vue3-migrate ai src/components/auth/ --commit
 vue3-migrate ai src/components/dashboard/ --commit
 ```
 
-### Example 3: Custom Rules for Company
+### Custom Rules
 
 ```bash
-# Create company-specific rules
-cp MIGRATION_RULES.md ./company-migration-rules.md
-# Edit file with your patterns...
+# Copy built-in rules
+cp node_modules/vue3-migration-tool/MIGRATION_RULES.md ./my-rules.md
 
-# Use custom rules
-vue3-migrate --rules ./company-migration-rules.md ai src/
-```
-
-### Example 4: Preview Before Applying
-
-```bash
-# Scan only
-vue3-migrate --only scan
-
-# Dry run everything
-vue3-migrate --dry-run
-
-# Test AI on one file
-vue3-migrate ai src/App.vue --dry-run --mode report
+# Edit and use
+vue3-migrate --rules ./my-rules.md ai src/
 ```
 
 ## Troubleshooting
 
-### "OPENAI_API_KEY is not set"
-
-**Solution:** Set your API key:
+**"OPENAI_API_KEY is not set"**
 ```bash
 export OPENAI_API_KEY="sk-..."
 ```
 
-Or create a `.env` file:
-```
-OPENAI_API_KEY=sk-...
-```
-
-### "Not a git repo"
-
-**Solution:** Initialize git first:
+**"Not a git repo"**
 ```bash
 git init
 git add .
-git commit -m "Initial commit before migration"
+git commit -m "Initial commit"
 ```
 
-### "npm install failed with ERESOLVE"
+**"npm install failed with ERESOLVE"**
 
-**Solution:** The tool automatically retries with `--legacy-peer-deps`. If it still fails:
-```bash
-npm install --legacy-peer-deps
-```
+The tool automatically retries with `--legacy-peer-deps`.
 
-### AI codemods producing incorrect code
-
-**Solutions:**
-1. **Use better model**: `export OPENAI_MODEL="gpt-4o"`
-2. **Custom rules**: Add your patterns to MIGRATION_RULES.md
-3. **Lower confidence threshold**: Files below threshold won't auto-apply
-4. **Manual review**: Use `--mode ask` or `--mode report`
-
-### Large files timing out
-
-**Solution:** Increase max lines or skip large files:
-```bash
-vue3-migrate ai src/ --max-lines 800
-```
-
-### Build tool not detected
-
-**Solution:** The tool looks for:
-- Vite: `vite.config.js/ts` or `"vite"` in dependencies
-- Vue CLI: `vue.config.js` or `"@vue/cli-service"` in dependencies
-- Webpack: `"webpack"` in dependencies
-
-If custom, you may need to update configs manually.
-
-## Custom Migration Rules
-
-The tool uses `MIGRATION_RULES.md` to guide AI transformations. You can:
-
-### View Built-in Rules
-
-```bash
-# After installing
-cat node_modules/vue3-migration-tool/MIGRATION_RULES.md
-```
-
-### Create Custom Rules
-
-1. Copy built-in rules to your project:
-```bash
-cp node_modules/vue3-migration-tool/MIGRATION_RULES.md ./my-rules.md
-```
-
-2. Edit `my-rules.md` with your patterns:
-```markdown
-## Custom Patterns
-
-- Replace `this.$myPlugin` with `useMyPlugin()` composable
-- Update custom component props: `old-prop` → `newProp`
-- Use company authentication helpers instead of direct API calls
-```
-
-3. Use your rules:
-```bash
-vue3-migrate --rules ./my-rules.md ai src/
-```
-
-### Rules Best Practices
-
-- ✅ **Be specific**: Include code examples
-- ✅ **Show before/after**: Clear transformations
-- ✅ **Document edge cases**: Handle special situations
-- ✅ **Prioritize patterns**: Put most important rules first
-- ✅ **Test incrementally**: Validate on small files first
+**AI producing incorrect code**
+- Use better model: `export OPENAI_MODEL="gpt-4o"`
+- Add custom rules to MIGRATION_RULES.md
+- Use `--mode ask` or `--mode report` for review
 
 ## What This Tool Doesn't Do
 
-- ❌ **Modify build configs**: You may need to update `vite.config.js`, `vue.config.js` manually
-- ❌ **Update main.js**: Entry point still needs manual migration (`new Vue()` → `createApp()`)
-- ❌ **Migrate tests**: Test files require separate attention
-- ❌ **Update deployment**: CI/CD configs may need Node version updates
-- ❌ **Handle custom plugins**: Third-party plugins need manual review
+- Modify build configs (vite.config.js, vue.config.js)
+- Update main.js entry point (new Vue() → createApp())
+- Migrate test files
+- Update CI/CD configs
+- Handle all custom plugins
 
 ## Environment Variables
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `OPENAI_API_KEY` | OpenAI API key (required for AI) | - |
+| `OPENAI_API_KEY` | OpenAI API key | - |
 | `OPENAI_MODEL` | Model to use | `gpt-4o-mini` |
-| `MIGRATION_RULES_PATH` | Path to custom rules file | Built-in rules |
-| `AI_RULES_MODE` | Rules mode: `smart` or `full` | `smart` |
+| `MIGRATION_RULES_PATH` | Path to custom rules | Built-in |
+| `AI_RULES_MODE` | Rules mode (smart/full) | `smart` |
 
-## Contributing
+## Documentation
 
-See [DEVELOPMENT.md](./DEVELOPMENT.md) for contributor guide.
+- [CONFIGURATION.md](./CONFIGURATION.md) - Detailed configuration guide
+- [DEVELOPMENT.md](./DEVELOPMENT.md) - Contributor guide
+
+## Support
+
+- Issues: https://github.com/Tefik-Rudari/migration-tool-vue2-vue3/issues
+- Repository: https://github.com/Tefik-Rudari/migration-tool-vue2-vue3
 
 ## License
 
 MIT
-
-## Support
-
-- 🐛 **Issues**: https://github.com/Tefik-Rudari/migration-tool-vue2-vue3/issues
-- 📖 **Docs**: https://github.com/Tefik-Rudari/migration-tool-vue2-vue3
-- 💬 **Discussions**: https://github.com/Tefik-Rudari/migration-tool-vue2-vue3/discussions
-
-## Acknowledgments
-
-Built with:
-- [Commander.js](https://github.com/tj/commander.js) - CLI framework
-- [OpenAI API](https://platform.openai.com/) - AI transformations
-- [Chalk](https://github.com/chalk/chalk) - Terminal styling
-- [Ora](https://github.com/sindresorhus/ora) - Spinners
