@@ -74,8 +74,7 @@ vue3-migration-tool/
 │   │   ├── preflight.ts   # Git validation
 │   │   ├── scan.ts        # Project detection
 │   │   ├── update-deps.ts # Dependency updates
-│   │   ├── ai-codemods.ts # AI transformations
-│   │   └── codemods.ts    # AST-based transforms
+│   │   └── ai-codemods.ts # AI transformations
 │   ├── index.ts           # CLI entry point
 │   └── runner.ts          # Step orchestration
 ├── dist/                  # Compiled output

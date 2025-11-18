@@ -1,15 +1,14 @@
 # Vue 3 Migration Tool
 
-AI-powered CLI tool to migrate Vue 2 projects to Vue 3, with support for Vue Router, Vuex, and Vuetify.
+AI-powered CLI tool to migrate Vue 2 projects to Vue 3, with support for Vue Router, Vuex, and Vuetify dependencies.
 
 ## Features
 
 - AI-powered component transformations using OpenAI
 - Smart project detection (build tool, TypeScript, dependencies)
-- Automatic dependency updates (30+ packages)
+- Automatic dependency updates (30+ packages including Vuetify)
 - Modular steps with `--skip` and `--only` flags
 - Custom migration rules support
-- Vuetify 2 → 3 migrations
 - Git safety checks and backups
 
 ## Prerequisites
@@ -162,16 +161,19 @@ Detects:
 - Potential blockers
 
 ### 3. Update Dependencies
-- Updates Vue core packages
+- Updates Vue core packages (vue, vue-router, vuex)
+- Updates Vuetify package to v3 (if detected)
 - Updates build tools and testing frameworks
 - Removes Vue 2-only packages
 - Creates package.json backup
 
 ### 4. AI Codemods (Optional)
 - Converts to `<script setup lang="ts">`
-- Updates Vuetify 2 → 3 components
-- Provides confidence scoring
+- Transforms component templates based on MIGRATION_RULES.md
+- Provides confidence scoring per file
 - Validates syntax before writing
+
+**Note:** Vuetify template migrations (components, props, slots) are handled by AI codemods based on the rules in MIGRATION_RULES.md. For complex Vuetify projects, manual review may be needed.
 
 ## Examples
 
@@ -227,13 +229,29 @@ The tool automatically retries with `--legacy-peer-deps`.
 - Add custom rules to MIGRATION_RULES.md
 - Use `--mode ask` or `--mode report` for review
 
-## What This Tool Doesn't Do
+**Vuetify migrations incomplete**
+- AI codemods handle common Vuetify patterns but not all edge cases
+- Review the built-in MIGRATION_RULES.md for supported Vuetify transformations
+- Add project-specific Vuetify patterns to custom rules
+- Consider manual migration for complex Vuetify components
+- Reference: https://vuetifyjs.com/en/getting-started/upgrade-guide/
 
-- Modify build configs (vite.config.js, vue.config.js)
-- Update main.js entry point (new Vue() → createApp())
-- Migrate test files
-- Update CI/CD configs
-- Handle all custom plugins
+## What This Tool Does and Doesn't Do
+
+**Does:**
+- ✅ Update Vue, Vue Router, Vuex dependencies to v3
+- ✅ Update Vuetify dependency to v3
+- ✅ AI-based component script transformations
+- ✅ AI-based template updates (via MIGRATION_RULES.md)
+- ✅ Remove Vue 2-only packages
+
+**Doesn't:**
+- ❌ Comprehensive Vuetify component migration (AI-assisted only)
+- ❌ Update build configs (vite.config.js, vue.config.js)
+- ❌ Update main.js entry point (new Vue() → createApp())
+- ❌ Migrate test files
+- ❌ Update CI/CD configs
+- ❌ Guarantee 100% working migration without manual review
 
 ## Environment Variables Reference
 
