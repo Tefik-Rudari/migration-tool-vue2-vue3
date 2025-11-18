@@ -11,6 +11,12 @@ import type { RunContext } from "./types.js";
 import fetch from "node-fetch";
 import fs from 'fs';
 import path from 'path';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+
+// ES module __dirname polyfill
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 function extractSmartRules(rulesText: string, filePath: string): string {
   if (!rulesText) return '';

@@ -33,32 +33,32 @@ vue3-migrate
 
 ## Configuration
 
-### OpenAI API Key (Required for AI Features)
+### Environment Variables
+
+Create a `.env` file in your project root or export variables:
 
 ```bash
-# Environment variable
-export OPENAI_API_KEY="sk-..."
-
-# Or create .env file in your project root
-echo "OPENAI_API_KEY=sk-..." > .env
+OPENAI_API_KEY=sk-...
+OPENAI_BASE_URL=https://api.openai.com/v1
+OPENAI_MODEL=gpt-5
+OPENAI_RATE_INPUT_PER1K=0.006
+OPENAI_RATE_OUTPUT_PER1K=0.018
 ```
 
-Get your API key: https://platform.openai.com/api-keys
+**Get your API key:** https://platform.openai.com/api-keys
 
-### Choose AI Model (Optional)
+**Pricing info:** https://platform.openai.com/docs/pricing
 
-```bash
-# Default: gpt-4o-mini (fast, cost-effective)
-export OPENAI_MODEL="gpt-4o-mini"
+**Note:** The tool reads `.env` files automatically via dotenv.
 
-# Better quality: gpt-4o
-export OPENAI_MODEL="gpt-4o"
-```
-
-### Custom Migration Rules (Optional)
+### Using CLI Flags
 
 ```bash
+# Custom rules via flag
 vue3-migrate --rules ./my-rules.md
+
+# Combine with other options
+vue3-migrate ai src/ --rules ./company-rules.md --mode ask
 ```
 
 ## Usage
@@ -235,14 +235,28 @@ The tool automatically retries with `--legacy-peer-deps`.
 - Update CI/CD configs
 - Handle all custom plugins
 
-## Environment Variables
+## Environment Variables Reference
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `OPENAI_API_KEY` | OpenAI API key | - |
-| `OPENAI_MODEL` | Model to use | `gpt-4o-mini` |
-| `MIGRATION_RULES_PATH` | Path to custom rules | Built-in |
-| `AI_RULES_MODE` | Rules mode (smart/full) | `smart` |
+| Variable | Required | Description | Default |
+|----------|----------|-------------|---------|
+| `OPENAI_API_KEY` | Yes (for AI) | OpenAI API key | - |
+| `OPENAI_MODEL` | No | Model to use | `gpt-4o-mini` |
+| `OPENAI_BASE_URL` | No | API endpoint URL | `https://api.openai.com/v1` |
+| `OPENAI_RATE_INPUT_PER1K` | No | Input cost per 1K tokens (USD) | Auto-detect |
+| `OPENAI_RATE_OUTPUT_PER1K` | No | Output cost per 1K tokens (USD) | Auto-detect |
+| `MIGRATION_RULES_PATH` | No | Path to custom rules file | Built-in |
+| `AI_RULES_MODE` | No | Rules mode: `smart` or `full` | `smart` |
+
+**Example:**
+```bash
+OPENAI_API_KEY=sk-...
+OPENAI_BASE_URL=https://api.openai.com/v1
+OPENAI_MODEL=gpt-5
+OPENAI_RATE_INPUT_PER1K=0.006
+OPENAI_RATE_OUTPUT_PER1K=0.018
+```
+
+**Pricing:** https://platform.openai.com/docs/pricing
 
 ## Documentation
 
