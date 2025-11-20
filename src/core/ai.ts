@@ -140,21 +140,30 @@ export async function aiRewriteFile(
   // 2. MIGRATION_RULES_PATH env var (legacy support)
   // 3. Project root MIGRATION_RULES.md
   // 4. Package's built-in MIGRATION_RULES.md (from node_modules/vue23-migrate-tool/)
-  const possiblePaths = [
-    ctx.rulesPath,
-    process.env.MIGRATION_RULES_PATH,
-    path.resolve(process.cwd(), 'MIGRATION_RULES.md'),
-    path.resolve(process.cwd(), 'migrate-tool/MIGRATION_RULES.md'),
-    // Built-in rules (when installed as package)
-    path.resolve(__dirname, '../../MIGRATION_RULES.md'),
-  ].filter(Boolean) as string[];
+  const builtInRulesPath = path.resolve(__dirname, '../../MIGRATION_RULES.md');
+  type RulesSource = 'cli' | 'env' | 'projectRoot' | 'projectSubdir' | 'builtin';
+  const candidatePaths: { path: string; source: RulesSource }[] = [];
+
+  if (ctx.rulesPath) {
+    candidatePaths.push({ path: ctx.rulesPath, source: 'cli' });
+  }
+  if (process.env.MIGRATION_RULES_PATH) {
+    candidatePaths.push({ path: process.env.MIGRATION_RULES_PATH, source: 'env' });
+  }
+  candidatePaths.push(
+    { path: path.resolve(process.cwd(), 'MIGRATION_RULES.md'), source: 'projectRoot' },
+    { path: path.resolve(process.cwd(), 'migrate-tool/MIGRATION_RULES.md'), source: 'projectSubdir' },
+    { path: builtInRulesPath, source: 'builtin' },
+  );
 
   let rulesText = '';
   let rulesPath = '';
-  for (const p of possiblePaths) {
+  let rulesSource: RulesSource | null = null;
+  for (const candidate of candidatePaths) {
     try {
-      rulesText = fs.readFileSync(p, 'utf8');
-      rulesPath = p;
+      rulesText = fs.readFileSync(candidate.path, 'utf8');
+      rulesPath = candidate.path;
+      rulesSource = candidate.source;
       break;
     } catch { }
   }
@@ -162,7 +171,19 @@ export async function aiRewriteFile(
   if (!rulesText) {
     console.warn('⚠️  No MIGRATION_RULES.md found. Using built-in prompt only.');
   } else {
-    console.log(`📖 Using migration rules: ${path.basename(rulesPath)}`);
+    const sourceLabels: Record<RulesSource, string> = {
+      cli: '--rules flag',
+      env: 'MIGRATION_RULES_PATH env',
+      projectRoot: 'project root',
+      projectSubdir: 'migrate-tool folder',
+      builtin: 'package default',
+    };
+    if (rulesSource === 'builtin') {
+      console.log(`📖 Using built-in migration rules (${rulesPath}).`);
+    } else {
+      const hint = rulesSource ? sourceLabels[rulesSource] : 'custom path';
+      console.log(`📖 Using custom migration rules from ${hint}: ${rulesPath}`);
+    }
   }
 
   // Allow a lighter, faster prompt by sending a subset of the rules most relevant to the current file.
