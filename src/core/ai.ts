@@ -135,35 +135,41 @@ export async function aiRewriteFile(
     ? input.code.slice(0, MAX_CHARS) + "\n/* ...file truncated for AI... */"
     : input.code;
 
-  // Try to find MIGRATION_RULES.md in this order:
-  // 1. ctx.rulesPath (user provided via --rules flag)
-  // 2. MIGRATION_RULES_PATH env var (legacy support)
-  // 3. Project root MIGRATION_RULES.md
-  // 4. Package's built-in MIGRATION_RULES.md (from node_modules/vue23-migrate-tool/)
+  // Rules discovery:
+  // 1. If --rules flag or MIGRATION_RULES_PATH env var → use that (explicit = custom)
+  // 2. Otherwise → use built-in rules (default)
   const builtInRulesPath = path.resolve(__dirname, '../../MIGRATION_RULES.md');
-  const candidatePaths = [
-    ctx.rulesPath,
-    process.env.MIGRATION_RULES_PATH,
-    path.resolve(process.cwd(), 'MIGRATION_RULES.md'),
-    path.resolve(process.cwd(), 'migrate-tool/MIGRATION_RULES.md'),
-    builtInRulesPath,
-  ].filter(Boolean) as string[];
+
   let rulesText = '';
   let rulesPath = '';
-  for (const candidatePath of candidatePaths) {
+  let isCustom = false;
+
+  // Check for explicitly specified custom rules
+  const customRulesPath = ctx.rulesPath || process.env.MIGRATION_RULES_PATH;
+
+  if (customRulesPath) {
+    // User explicitly specified custom rules
     try {
-      rulesText = fs.readFileSync(candidatePath, 'utf8');
-      rulesPath = candidatePath;
-      break;
-    } catch { }
+      rulesText = fs.readFileSync(customRulesPath, 'utf8');
+      rulesPath = customRulesPath;
+      isCustom = true;
+      console.log(`📖 Using custom migration rules: ${path.resolve(rulesPath)}`);
+    } catch (err) {
+      console.warn(`⚠️  Custom rules file not found: ${customRulesPath}`);
+      console.log('📖 Falling back to built-in migration rules');
+      // Fall through to built-in
+    }
   }
 
+  // Use built-in rules (default)
   if (!rulesText) {
-    console.warn('⚠️  No MIGRATION_RULES.md found. Using built-in prompt only.');
-  } else {
-    const isBuiltIn = path.resolve(rulesPath) === builtInRulesPath;
-    const kind = isBuiltIn ? 'built-in' : 'custom';
-    console.log(`📖 Using ${kind} migration rules: ${rulesPath}`);
+    try {
+      rulesText = fs.readFileSync(builtInRulesPath, 'utf8');
+      rulesPath = builtInRulesPath;
+      console.log('📖 Using built-in migration rules');
+    } catch {
+      console.warn('⚠️  No migration rules found. Using built-in prompt only.');
+    }
   }
 
   // Allow a lighter, faster prompt by sending a subset of the rules most relevant to the current file.

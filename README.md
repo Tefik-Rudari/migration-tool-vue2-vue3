@@ -46,7 +46,7 @@ OPENAI_RATE_OUTPUT_PER1K=0.018
 
 **Get your API key:** https://platform.openai.com/api-keys
 
-**Pricing info:** https://platform.openai.com/docs/pricing
+**OpenAI pricing reference:** https://platform.openai.com/docs/pricing
 
 **Note:** The tool reads `.env` files automatically via dotenv.
 
