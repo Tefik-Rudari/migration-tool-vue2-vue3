@@ -73,6 +73,7 @@ Steps:
 2. Scan project and detect versions
 3. Update dependencies to Vue 3
 4. Offer AI codemods (optional)
+5. Prints the installed `vue3-migrate` version at start so you know which release you’re running
 
 ### AI Codemods Only
 
@@ -161,6 +162,7 @@ Detects:
 - Potential blockers
 
 ### 3. Update Dependencies
+- Rule-driven updater: only touches packages present in your package.json, applies Vue 3–safe bumps/removals/replacements, and warns on legacy Vue 2-era libraries.
 - Updates Vue core packages (vue, vue-router, vuex)
 - Updates Vuetify package to v3 (if detected)
 - Updates build tools and testing frameworks

@@ -113,6 +113,11 @@ export async function runAll(ctx: RunContext) {
     console.log(chalk.yellow("\n⚠️  Some steps failed:"));
     for (const f of failedSteps) console.log(`   • ${f.name}: ${f.error}`);
     console.log(chalk.yellow("You can fix these manually and re-run specific steps with --only or --skip."));
+    if (ctx.nonInteractive) {
+      console.log(chalk.yellow("Skipping AI Codemods because previous steps failed (auto mode)."));
+      return;
+    }
+    console.log(chalk.yellow("Proceed with AI Codemods at your own risk, or rerun after fixing the failures."));
   }
 
   // Optional: offer AI codemods after core deps update

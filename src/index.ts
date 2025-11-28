@@ -1,9 +1,33 @@
 #!/usr/bin/env node
 
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
+import { dirname } from "path";
 import { Command } from "commander";
 import { runAll } from "./runner.js";
 import { aiCodemods } from "./steps/ai-codemods.js";
 import type { RunContext } from "./core/types.js";
+import chalk from "chalk";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+function readToolVersion(): string | null {
+  try {
+    const pkgPath = path.resolve(__dirname, "../package.json");
+    if (!fs.existsSync(pkgPath)) return null;
+    const pkg = JSON.parse(fs.readFileSync(pkgPath, "utf-8"));
+    return pkg.version || null;
+  } catch {
+    return null;
+  }
+}
+
+function logToolVersion() {
+  const ver = readToolVersion();
+  if (ver) console.log(chalk.gray(`vue3-migrate version ${ver}`));
+}
 
 // Allow passing a custom migration rules file at runtime
 const rawArgv = process.argv.slice(2);
@@ -31,6 +55,7 @@ program
   .option("--skip <steps>", "Skip specific steps (comma-separated: preflight,deps,vite)")
   .option("--only <steps>", "Only run specific steps (comma-separated)")
   .action(async (opts) => {
+    logToolVersion();
     const ctx: RunContext & any = {
       root: process.cwd(),
       pm: "npm",
@@ -58,6 +83,7 @@ program
   .option("--dry-run", "show what would change, do not write", false)
   .option("--rules <path>", "Path to MIGRATION_RULES.md (used by AI layer)")
   .action(async (targets: string[], opts) => {
+    logToolVersion();
     const ctx: RunContext & any = {
       root: process.cwd(),
       pm: "npm",
