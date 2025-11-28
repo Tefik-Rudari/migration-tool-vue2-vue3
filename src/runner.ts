@@ -13,6 +13,15 @@ export async function runAll(ctx: RunContext) {
     { name: "Update Dependencies", description: "Bump to Vue 3 core deps and install. Optionally add @vue/compat.", run: updateDeps, optional: true },
   ];
 
+  const failedSteps: { name: string; error: string }[] = [];
+
+  const formatError = (err: unknown) => {
+    if (!err) return "Unknown error";
+    if (typeof err === "string") return err;
+    const anyErr = err as any;
+    return anyErr.shortMessage || anyErr.stderr || anyErr.message || String(err);
+  };
+
   const lname = (s: Step) => s.name.toLowerCase();
   const normalizeStepName = (name: string) => name.toLowerCase().replace(/\s+/g, "-");
 
@@ -43,6 +52,7 @@ export async function runAll(ctx: RunContext) {
 
   const start = 0;
   const end = stepsToRun.length - 1;
+  let abortedEarly = false;
 
   for (let i = start; i <= end; i++) {
     const s = stepsToRun[i];
@@ -55,7 +65,28 @@ export async function runAll(ctx: RunContext) {
       process.exit(0);
     }
 
-    await s.run(ctx);
+    try {
+      await s.run(ctx);
+    } catch (err) {
+      const msg = formatError(err);
+      failedSteps.push({ name: s.name, error: msg });
+      console.log(chalk.red(`❌ ${s.name} failed: ${msg}`));
+
+      if (!s.optional) {
+        const continueAfterError = await confirmContinue(
+          `Continue after "${s.name}" failed? (review logs above)`,
+          ctx.nonInteractive
+        );
+        if (!continueAfterError) {
+          console.log(chalk.yellow("⏹  Aborting due to failed required step."));
+          abortedEarly = true;
+          break;
+        }
+      } else {
+        console.log(chalk.yellow(`⚠️  ${s.name} is optional; continuing to next step.`));
+      }
+      continue;
+    }
 
     if (s.name === "Scan" && ctx.scan) {
       console.log();
@@ -71,6 +102,17 @@ export async function runAll(ctx: RunContext) {
         console.log(chalk.gray("Vuetify 2 → 3 will be a separate command after core Vue 3 migration is complete."));
       }
     }
+  }
+
+  if (abortedEarly) {
+    console.log(chalk.yellow("Fix the issue above and re-run the tool when ready."));
+    return;
+  }
+
+  if (failedSteps.length) {
+    console.log(chalk.yellow("\n⚠️  Some steps failed:"));
+    for (const f of failedSteps) console.log(`   • ${f.name}: ${f.error}`);
+    console.log(chalk.yellow("You can fix these manually and re-run specific steps with --only or --skip."));
   }
 
   // Optional: offer AI codemods after core deps update
