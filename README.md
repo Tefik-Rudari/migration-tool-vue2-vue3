@@ -87,6 +87,7 @@ vue3-migrate ai src/App.vue src/components/
 # With options
 vue3-migrate ai src/ --mode auto --commit --dry-run
 ```
+If `OPENAI_API_KEY` is missing, AI codemods are skipped with a warning.
 
 ### Selective Step Execution
 

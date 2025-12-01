@@ -80,6 +80,7 @@ All notable changes to the Vue 2 → Vue 3 Migration Tool.
 ### Added
 - Rule-driven dependency updater that only touches packages present in your project, handles Vue 3–safe bumps/removals/replacements, and warns on legacy Vue 2-era libs.
 - CLI logs its version at startup (npm/npx).
+- AI codemods now short-circuit with a clear warning if `OPENAI_API_KEY` is missing.
 
 ### Changed
 - AI codemods are auto-skipped when earlier steps fail in non-interactive mode; interactive runs can still choose to proceed after a failure warning.

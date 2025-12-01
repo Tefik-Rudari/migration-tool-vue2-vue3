@@ -194,6 +194,11 @@ export async function aiCodemods(ctx: RunContext) {
   // Header
   console.log(chalk.cyan("\n🧠 AI Codemods"));
 
+  if (!process.env.OPENAI_API_KEY) {
+    console.log(chalk.red("❌ OPENAI_API_KEY is not set. Skipping AI Codemods."));
+    return;
+  }
+
   if (!targets.length) {
     console.log(chalk.yellow("No AI targets passed. Provide files/folders with --ai-targets."));
     return;
@@ -267,6 +272,7 @@ export async function aiCodemods(ctx: RunContext) {
   let skipped = 0;
   let failed = 0;
   const updatedFiles: string[] = [];
+  let fatalError = false;
   
   // Overall migration timing
   const overallStartTime = Date.now();
@@ -331,14 +337,24 @@ export async function aiCodemods(ctx: RunContext) {
       const before = success ? await fs.readFile(file, 'utf8') : original;
 
       spin.start(`AI rewrite (attempt ${attempts}/${verifyRetries + 1})`);
-      const result = await aiRewriteFile(ctx, {
-        filePath: rel,
-        language: lang,
-        code: before,
-        projectHints: hints,
-        goals: augmentedGoals,
-      });
-      spin.stop();
+      let result: Awaited<ReturnType<typeof aiRewriteFile>> | null = null;
+      try {
+        result = await aiRewriteFile(ctx, {
+          filePath: rel,
+          language: lang,
+          code: before,
+          projectHints: hints,
+          goals: augmentedGoals,
+        });
+        spin.stop();
+      } catch (err: any) {
+        const msg = err?.message || String(err);
+        spin.fail(`error: ${msg}`);
+        console.log(chalk.red(`AI rewrite failed for ${rel}: ${msg}`));
+        failed++;
+        fatalError = true;
+        break;
+      }
 
       if (!result) {
         console.log(chalk.gray('skipped'));
@@ -407,6 +423,10 @@ export async function aiCodemods(ctx: RunContext) {
       }
     }
 
+    if (fatalError) {
+      break;
+    }
+
     if (success) {
       changed++;
       updatedFiles.push(rel);
@@ -419,6 +439,11 @@ export async function aiCodemods(ctx: RunContext) {
         }
       }
     }
+  }
+
+  if (fatalError) {
+    console.log(chalk.red("\nAI Codemods aborted due to an error. Fix the issue above and rerun."));
+    return;
   }
 
   // Summary with timing information
