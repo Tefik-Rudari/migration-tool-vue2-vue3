@@ -178,10 +178,21 @@ export async function aiCodemods(ctx: RunContext) {
     : 800;
 
   // Per-file verification & retry settings (read from ctx, fall back to defaults)
-  const verifyEnabled = ((ctx as any).aiVerify ?? true) as boolean;
+  let verifyEnabled = ((ctx as any).aiVerify ?? true) as boolean;
   const verifyRetries = Number.isFinite(((ctx as any).aiVerifyRetries as number))
     ? (((ctx as any).aiVerifyRetries as number) | 0)
     : 2; // total attempts = verifyRetries + 1
+  const verifierPath = path.join(ctx.root, "tools/verify-migration.mjs");
+  let verifierAvailable = true;
+  try {
+    await fs.stat(verifierPath);
+  } catch {
+    verifierAvailable = false;
+    if (verifyEnabled) {
+      console.log(chalk.gray("Verifier script not found (tools/verify-migration.mjs). Skipping verification for AI codemods."));
+      verifyEnabled = false;
+    }
+  }
 
   // Minimum confidence: results below this will be retried even if verifier passes
   // Raised to favor higher-confidence outputs for standard, well-documented migrations
@@ -444,6 +455,12 @@ export async function aiCodemods(ctx: RunContext) {
   if (fatalError) {
     console.log(chalk.red("\nAI Codemods aborted due to an error. Fix the issue above and rerun."));
     return;
+  }
+
+  if (!verifyEnabled && !verifierAvailable) {
+    console.log(chalk.yellow("⚠️ Verification skipped (tools/verify-migration.mjs not found). Review changes manually."));
+  } else if (!verifyEnabled) {
+    console.log(chalk.yellow("⚠️ Verification disabled. Review changes manually."));
   }
 
   // Summary with timing information

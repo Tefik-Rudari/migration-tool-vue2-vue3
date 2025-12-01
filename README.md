@@ -88,6 +88,7 @@ vue3-migrate ai src/App.vue src/components/
 vue3-migrate ai src/ --mode auto --commit --dry-run
 ```
 If `OPENAI_API_KEY` is missing, AI codemods are skipped with a warning.
+If `tools/verify-migration.mjs` is not present in the target project, verification is skipped (AI output is applied directly); you’ll see a warning to review changes manually.
 
 ### Selective Step Execution
 
