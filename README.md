@@ -271,7 +271,7 @@ The tool automatically retries with `--legacy-peer-deps`.
 | Variable | Required | Description | Default |
 |----------|----------|-------------|---------|
 | `OPENAI_API_KEY` | Yes (for AI) | OpenAI API key | - |
-| `OPENAI_MODEL` | No | Model to use | `gpt-4o-mini` |
+| `OPENAI_MODEL` | No | Model to use | `gpt-5` |
 | `OPENAI_BASE_URL` | No | API endpoint URL | `https://api.openai.com/v1` |
 | `OPENAI_RATE_INPUT_PER1K` | No | Input cost per 1K tokens (USD) | Auto-detect |
 | `OPENAI_RATE_OUTPUT_PER1K` | No | Output cost per 1K tokens (USD) | Auto-detect |
