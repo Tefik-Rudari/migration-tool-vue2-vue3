@@ -82,9 +82,16 @@ All notable changes to the Vue 2 → Vue 3 Migration Tool.
 - CLI logs its version at startup (npm/npx).
 - AI codemods now short-circuit with a clear warning if `OPENAI_API_KEY` is missing.
 - AI verifier is skipped automatically when `tools/verify-migration.mjs` is not present in the target project.
+- `AI_MAX_SOURCE_LINES` env var to adjust the file size threshold (default 800 lines) before sending a component to the AI.
 
 ### Changed
 - AI codemods are auto-skipped when earlier steps fail in non-interactive mode; interactive runs can still choose to proceed after a failure warning.
+- Migration rules and AI goals were generalized to avoid project-specific HTTP/i18n assumptions (no enforced custom wrappers).
+- Documented current limitations in README (router/main entry, non-Vue TS/JS files, configs remain manual) and added a callout near quick start pointing readers to the scope/limitations sections.
+- Clarified AI goal wording to emphasize using existing HTTP/i18n approaches without implying custom wrappers.
+
+### Fixed
+- AI codemods now ensure the max source line threshold always resolves to a number to avoid TypeScript undefined errors when excluding large files.
 
 ## Migration Guide
 

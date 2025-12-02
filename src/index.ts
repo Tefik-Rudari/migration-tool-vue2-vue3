@@ -29,6 +29,13 @@ function logToolVersion() {
   if (ver) console.log(chalk.gray(`vue3-migrate version ${ver}`));
 }
 
+function parseEnvInt(name: string): number | undefined {
+  const raw = process.env[name];
+  if (!raw) return undefined;
+  const parsed = parseInt(raw, 10);
+  return Number.isFinite(parsed) ? parsed : undefined;
+}
+
 // Allow passing a custom migration rules file at runtime
 const rawArgv = process.argv.slice(2);
 let rulesArg = '';
@@ -65,6 +72,7 @@ program
       rulesPath: opts.rules,
       skipSteps: opts.skip ? opts.skip.split(",").map((s: string) => s.trim()) : undefined,
       onlySteps: opts.only ? opts.only.split(",").map((s: string) => s.trim()) : undefined,
+      aiMaxSourceLines: parseEnvInt("AI_MAX_SOURCE_LINES"),
       scan: undefined,
     };
     await runAll(ctx);
@@ -97,6 +105,7 @@ program
       aiMaxLines: Number.isFinite(opts.maxLines) ? opts.maxLines : 400,
       aiMinConfidence: Number.isFinite(opts.minConfidence) ? opts.minConfidence : undefined,
       aiVerifyRetries: Number.isFinite(opts.verifyRetries) ? opts.verifyRetries : undefined,
+      aiMaxSourceLines: parseEnvInt("AI_MAX_SOURCE_LINES"),
     };
     await aiCodemods(ctx);
   });

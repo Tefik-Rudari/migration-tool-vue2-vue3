@@ -3,44 +3,25 @@
 **Goal:** Rewrite a single file so it **compiles on Vue 3.5 + Vuetify 3 + TS 5.x** with the **same behavior**. Update **both `<script>` and template** for full migrations; for folder‑scoped incremental migrations, see Project profiles.
 
 ## 📋 QUICK REFERENCE (AI: Read this first)
-**MUST DO:** Use `<script setup lang="ts">` + use `useAxios()/useT()` (no axios import) + convert v-layout→v-row + provide confidence score. No local wrappers/fallbacks.  
-**TECH STACK:** Vue 3.5 + Vuetify 3 + custom i18nsrv-vue + untested composables  
+**MUST DO:** Use `<script setup lang="ts">`, migrate Vue 2 patterns to Vue 3/Vuetify 3, and provide a confidence score. Keep edits minimal and avoid assuming project-specific globals.  
+**TECH STACK:** Vue 3.5 + Vuetify 3 + TypeScript 5.x  
 **CONFIDENCE:** 95%=standard patterns, 90%=custom services, 80%=untested components, <80%=likely failures
 
 ## Hard rules
 
 - Use `<script setup lang="ts">` for all Vue components.
 - Do not use class decorators: no `@Component`, `@Prop`, `@Watch`.
-- Do not import `axios` and do not call `axios.create()`; use `useAxios()` from `@/composables/useGlobals`.
-- Do not import `useI18n`; use `useT()` from `@/composables/useGlobals` (templates keep `{{$t('key')}}`).
-- Do not access `$t`/`$axios` via `getCurrentInstance()` anywhere in the file.
+- Preserve existing HTTP/i18n integrations; do not invent new global wrappers unless the file already uses them.
+- Avoid accessing globals via `getCurrentInstance()` unless the file already relies on it and there is no safer alternative.
 - Vuetify 3: do not use `v-model` together with `:value`. Use a single `v-model`/`v-model:prop` binding.
 - Router: use `useRouter()` / `useRoute()` and `router.currentRoute.value`.
 
 ## 🚨 CRITICAL_RULES (AI: Must follow these first)
 
-### Custom i18n Service (`i18nsrv-vue`)
-- **CRITICAL**: This project uses a custom i18n service from a private git repo, NOT standard vue-i18n
-- **Known Issue**: The main.ts binding for `$t` was broken and has been fixed, but may break again
-- **Required Check**: Always verify the main.ts binding looks like this:
-  ```typescript
-  // CORRECT binding in main.ts (MUST be this way):
-  if (!(app.config.globalProperties as any).$t) {
-    (app.config.globalProperties as any).$t = (key: string, ...args: any[]) => (i18n as any).t(key, ...args)
-  }
-  ```
-- **Testing Required**: Always verify `useT()` composable works - the custom service may have Vue 3 compatibility issues
-
-### Global Composables Validation
-- **UPDATED**: `useAxios` and `useT` are provided via app-level inject in `main.ts` and are reliable.
-- **Guidance**: Use `useAxios()` / `useT()` directly. Do not import `axios` or call `getCurrentInstance()` for `$axios/$t` inside components.
-- **Compatibility**: Templates continue to use `{{$t('key')}}`. The composables handle any legacy fallback internally — do not add local wrappers or fallbacks in components.
-
-### Project Status Reality Check
-- **Current State**: This project may not run due to ongoing Vue 3 migration
-- **Dependencies**: Contains Vue 2-only packages that need project-wide updates
-- **Testing Limitation**: Most migrations cannot be runtime-tested until infrastructure is fixed
-- **Priority**: Fix critical infrastructure (i18n binding, global composables) before migrating more components
+### Global service safety
+- Respect existing globals (HTTP clients, i18n helpers, analytics). Keep current wiring unless a migration step explicitly requires a change.
+- If you cannot confirm how a global is provided, preserve the existing pattern and add a short TODO instead of replacing it.
+- Avoid adding new wrappers/composables for networking or i18n; reuse what the file already uses.
 
 ## ⚡ ESSENTIAL_PATTERNS (AI: Apply these patterns)
 
@@ -49,7 +30,6 @@
 - Vue 3.5.x, vue-router 4.x
 - Vuetify 3.x (templates MUST use v3 APIs)
 - Vuex 4 (for now)
-- i18n runtime: **`i18nsrv-vue`** (keep `$t` working)
 
 ### Hard rules
 - Rule precedence: folder overrides and the selected profile (Incremental vs Full) take precedence over general guidance and any system prompt. If a file falls under an Incremental/script‑only override, do not change the template (keep Vuetify 2 APIs) even during a full‑project migration unless that override is explicitly removed.
@@ -58,7 +38,7 @@
 - Incremental (folder/file) migration: prefer "script‑only" conversion (keep existing Vuetify 2 templates intact) unless the file already uses Vuetify 3 components.
 - If a file is already on Vuetify 3, avoid churn: do not rework markup unless fixing a concrete API/typing error.
 - Router: use `useRouter()/useRoute()` and **`router.currentRoute.value`**.
-- i18n in script: use `useT()` composable (see CRITICAL_RULES section); templates keep `{{$t('key')}}`.
+- Preserve existing i18n usage; keep templates working with current `$t`/translation helpers and avoid swapping libraries.
 - State: replace `this.*` with refs/reactive/computed.
 - Watchers: replace decorators with `watch()`; preserve debounce timings (use `lodash/debounce`).
 - Lifecycle: `mounted`→`onMounted`, `beforeDestroy/destroyed`→`onBeforeUnmount/onUnmounted`.
@@ -231,22 +211,10 @@ Note: In Incremental mode, keep V2 template APIs (e.g., `item-text`, `outlined`,
     function rowItems(item: any): any[] { return (item?.raw?.items || item?.items) ?? [] }
     ```
 
-## Axios & i18n (globals + typing)
-- Use `useAxios()` and `useT()` from `@/composables/useGlobals`.
-- Preferred pattern in scripts:
-  ```ts
-  import { useAxios, useT } from '@/composables/useGlobals'
-  const $axios = useAxios()
-  const $t = useT()
-  ```
-- Do not import `axios` or create instances via `axios.create()`.
-- Do not import `useI18n`; keep template `{{$t('key')}}` working, and use `useT()` in script.
-- Do not implement local wrappers or fallbacks (e.g., `safeUseAxios/safeUseT`, reading from `window/globalThis`, or `getCurrentInstance().proxy`). Rely solely on the composables.
-- Config typing: Do not pass arbitrary keys in Axios config objects. Use `params` to send querystring:
-  - Bad: `$axios.get(url, { integrationId: id })`
-  - Good: `$axios.get(url, { params: { integrationId: id } })`
-
-<!-- Removed checkbox/Luxon/$wait sections to streamline rules. Keep Axios config typing above; prefer local loading flags where needed. -->
+## HTTP & i18n usage
+- Keep the existing HTTP client and translation approach unless a migration requires API changes.
+- When you cannot confirm service wiring, preserve current usage and add a TODO rather than swapping libraries.
+- Prefer Composition API helpers (e.g., `useRouter`, `useRoute`) over legacy instance access; avoid `getCurrentInstance()` for globals unless already present and necessary.
 
 ## Icons and buttons (recap)
 - `<v-icon>` must use `:icon="'fa-…'"`; inline text is not supported.
@@ -277,11 +245,9 @@ Note: In Incremental mode, keep V2 template APIs (e.g., `item-text`, `outlined`,
 ## Directives & external libs
 - Remove Vue 2-only directives or replace with Vue 3 equivalents; avoid global `Vue.use()` and ensure all symbols are imported.
 
-## i18n usage (keep runtime)
-- **See CRITICAL_RULES section for complete i18n guidance**
-- Templates: keep `{{$t('key')}}` (global injection from i18nsrv-vue)
-- Scripts: use `useT()` composable — no local fallbacks/wrappers
-- Do not import `useI18n` or remove the `i18nsrv-vue` runtime
+## i18n usage
+- Keep template translations intact (e.g., `{{$t('key')}}` or project-specific helpers).
+- Do not replace the translation runtime; if unsure, leave existing usage and add a TODO.
 
 ## TypeScript & props hygiene
 - Prefer `undefined` over `null` for optional props (matches Vuetify typings).
@@ -296,20 +262,18 @@ Note: In Incremental mode, keep V2 template APIs (e.g., `item-text`, `outlined`,
 - Export modules as `export const moduleName = { namespaced: true, state, mutations, actions }`.
 
 ## API Response Patterns & Business Logic
-- Avoid `unknown`/`any` in API responses. Define types, e.g.: `type BookingResponse = { data: { data: BookingDTO } }`
-- Many endpoints return `response.data.data` (array/object). Some search endpoints return deeper `response.data.data.data`. Match the observed shape per endpoint.
-- Preserve existing class model usage. If code constructs `new Booking(...)`, keep that pattern.
-- Prop mutation is allowed if the original code mutated nested props (e.g. `props.tyreHotel.lastTyreHotelWheelChange!.order!.booking = …`).
-- Emits: preserve event names exactly. For `v-model`, keep existing prop/event names.
-- Router: use `useRouter()`. Preserve helper functions (`appendSitePrefix`, `isCurrentSiteId`).
+- Avoid `unknown`/`any` in API responses; type payloads based on observed shapes.
+- Preserve existing domain helpers, models, and class usage; do not refactor business logic.
+- Keep prop/event names stable (especially for `v-model` pairs) to avoid breaking parents.
+- Router: use `useRouter()`/`useRoute()` and maintain any existing navigation helpers.
 
 ## Scoped styles in Vue 3
 - When styling child components’ internal markup under `scoped` styles, use the Vue 3 deep selector: `:deep(.class)` or `::v-deep .class`.
 - Prefer targeting your own wrapper elements where possible to avoid deep selectors. Use deep only when necessary for Vuetify internals.
 
-## Types and IDs (project conventions)
-- IDs and numeric fields can be `string | number`. Accept unions in props/state where appropriate and normalize (e.g., `parseFloat(String(v))`) only where arithmetic is needed.
-- Prefer `undefined` over `null` for optional props. Keep `null` in component state where current truthiness checks rely on it.
+## Types and IDs
+- Allow `string | number` unions where the existing code does so; normalize only when arithmetic is required.
+- Prefer `undefined` over `null` for optional props unless `null` is relied on in existing logic.
 
 ## TypeScript hygiene for store modules
 - State factory must return a function, e.g. `const state = () => ({ foo: '' })`.

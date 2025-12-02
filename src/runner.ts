@@ -134,6 +134,7 @@ export async function runAll(ctx: RunContext) {
         aiMode: ctx.aiMode ?? "auto",
         aiCommit: Boolean(ctx.aiCommit ?? false),
         aiMaxLines: Number.isFinite(ctx.aiMaxLines as number) ? (ctx.aiMaxLines as number) : 600,
+        aiMaxSourceLines: Number.isFinite(ctx.aiMaxSourceLines as number) ? (ctx.aiMaxSourceLines as number) : undefined,
       };
       await aiCodemods(aiCtx as typeof ctx);
     } catch (e) {

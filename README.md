@@ -30,6 +30,8 @@ npm install -g vue3-migration-tool
 vue3-migrate
 ```
 
+> **Important:** Before running, read “What This Tool Does and Doesn’t Do” and “Limitations” to understand what stays manual (e.g., router/main entry, non-Vue `.ts/.js` files), and check the configuration docs for required setup.
+
 ## Configuration
 
 ### Environment Variables
@@ -253,9 +255,16 @@ The tool automatically retries with `--legacy-peer-deps`.
 - ❌ Comprehensive Vuetify component migration (AI-assisted only)
 - ❌ Update build configs (vite.config.js, vue.config.js)
 - ❌ Update main.js entry point (new Vue() → createApp())
+- ❌ Rewrite router setup (createRouter/createWebHistory, route records)
+- ❌ Migrate non-Vue .ts/.js files beyond SFC scripts
 - ❌ Migrate test files
 - ❌ Update CI/CD configs
 - ❌ Guarantee 100% working migration without manual review
+
+### Limitations (read me)
+- AI codemods target `.vue` SFCs; other `.ts/.js` files (router, stores, utilities) must be migrated manually for now.
+- Router/main entry wiring is not automated; apply `createRouter/createApp` updates yourself.
+- Build/test/CI config changes are out of scope; review and migrate those manually.
 
 ## Environment Variables Reference
 
@@ -268,6 +277,7 @@ The tool automatically retries with `--legacy-peer-deps`.
 | `OPENAI_RATE_OUTPUT_PER1K` | No | Output cost per 1K tokens (USD) | Auto-detect |
 | `MIGRATION_RULES_PATH` | No | Path to custom rules file | Built-in |
 | `AI_RULES_MODE` | No | Rules mode: `smart` or `full` | `smart` |
+| `AI_MAX_SOURCE_LINES` | No | Skip sending files above this line count to the AI | `800` |
 
 **Example:**
 ```bash
@@ -276,6 +286,9 @@ OPENAI_BASE_URL=https://api.openai.com/v1
 OPENAI_MODEL=gpt-5
 OPENAI_RATE_INPUT_PER1K=0.006
 OPENAI_RATE_OUTPUT_PER1K=0.018
+MIGRATION_RULES_PATH=./MIGRATION_RULES.md   # optional custom rules file
+AI_RULES_MODE=smart                         # or "full" to send all rules
+AI_MAX_SOURCE_LINES=800                     # skip files over this line count for AI
 ```
 
 **Pricing:** https://platform.openai.com/docs/pricing

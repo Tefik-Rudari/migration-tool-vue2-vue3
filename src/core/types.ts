@@ -34,6 +34,7 @@ export type RunContext = {
   aiMode?: "auto" | "ask" | "report"; // how to apply codemods
   aiCommit?: boolean;                 // auto-commit changes?
   aiMaxLines?: number;                // safeguard for huge patches
+  aiMaxSourceLines?: number;          // skip sending files over this line count to the AI
 
   // add more as we move forward (scan results, file lists, etc.)
   scan?: {

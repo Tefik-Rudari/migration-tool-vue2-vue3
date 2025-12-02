@@ -173,9 +173,17 @@ export async function aiCodemods(ctx: RunContext) {
   const mode: "auto" | "ask" | "report" = ctx.aiMode ?? "auto";
   const commit = Boolean(ctx.aiCommit ?? false);
   const maxLines = Number.isFinite((ctx.aiMaxLines as number)) ? (ctx.aiMaxLines as number) : 600;
-  const excludeOverLines = Number.isFinite(((ctx as any).aiExcludeOverLines as number))
-    ? (((ctx as any).aiExcludeOverLines as number) | 0)
-    : 800;
+  const envMaxSourceLines = Number.parseInt(process.env.AI_MAX_SOURCE_LINES ?? "", 10);
+  const maxSourceLinesCandidate =
+    Number.isFinite((ctx.aiMaxSourceLines as number))
+      ? (ctx.aiMaxSourceLines as number)
+      : Number.isFinite((ctx as any).aiExcludeOverLines as number)
+        ? ((ctx as any).aiExcludeOverLines as number)
+        : Number.isFinite(envMaxSourceLines) ? envMaxSourceLines : undefined;
+  const maxSourceLines =
+    typeof maxSourceLinesCandidate === "number" && Number.isFinite(maxSourceLinesCandidate)
+      ? maxSourceLinesCandidate
+      : 800;
 
   // Per-file verification & retry settings (read from ctx, fall back to defaults)
   let verifyEnabled = ((ctx as any).aiVerify ?? true) as boolean;
@@ -267,7 +275,7 @@ export async function aiCodemods(ctx: RunContext) {
     "If Vuetify 2 usage detected, migrate to Vuetify 3 APIs (component/prop names, slots).",
     "Keep business logic and types intact; add TODO comments if unsure.",
     `Aim for model confidence >= ${minConfidence.toFixed(2)} on the first attempt. If only standard patterns are applied (no business logic change), set confidence to 0.95+.`,
-    "CRITICAL: Use useAxios() and useT() from @/composables/useGlobals. Do NOT implement local fallbacks/wrappers or access getCurrentInstance().",
+    "CRITICAL: Use the file’s existing HTTP/i18n approach; do not add new wrappers. Avoid getCurrentInstance() for globals unless the file already relies on it and no safer alternative exists.",
     "CRITICAL: Always provide a confidence score at the end and mention if assumptions are untested.",
     ...(strictFirst
       ? [
@@ -316,9 +324,9 @@ export async function aiCodemods(ctx: RunContext) {
 
     // Exclude very large files to avoid excessive AI diffs
     const lineCount = original.split('\n').length;
-    if (lineCount >= excludeOverLines) {
+    if (lineCount >= maxSourceLines) {
       const indexStr = chalk.gray(`[${i + 1}/${vueFiles.length}]`);
-      console.log(`${indexStr} ${chalk.white(rel)} → ${chalk.gray(`skipped (too large: ${lineCount} lines ≥ ${excludeOverLines})`)}`);
+      console.log(`${indexStr} ${chalk.white(rel)} → ${chalk.gray(`skipped (too large: ${lineCount} lines ≥ ${maxSourceLines})`)}`);
       skipped++;
       continue;
     }

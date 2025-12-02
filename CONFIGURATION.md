@@ -107,6 +107,23 @@ export AI_RULES_MODE="full"
 - Higher token cost
 - Use when smart mode misses patterns
 
+#### `AI_MAX_SOURCE_LINES`
+
+Upper bound for how many lines of a file are sent to the AI. Files at or above this line count are skipped to keep prompts small.
+
+```bash
+# Default
+export AI_MAX_SOURCE_LINES=800
+
+# Increase only when you need to migrate very large components
+export AI_MAX_SOURCE_LINES=1200
+```
+
+**Why set this?**
+- Avoids slow, expensive prompts on very large SFCs
+- Helps maintain higher confidence scores on the migrated output
+- Keeps the CLI responsive when scanning big folders
+
 ## OpenAI Configuration
 
 ### Setting Up API Access
@@ -156,8 +173,9 @@ vue3-migrate ai src/legacy-components/
 export AI_RULES_MODE="smart"
 ```
 
-5. **Set Max Lines**: Skip huge files that cost a lot
+5. **Set Line Guards**: Skip huge files that cost a lot
 ```bash
+export AI_MAX_SOURCE_LINES=800   # skip sending very large files to the AI
 vue3-migrate ai src/ --max-lines 400
 ```
 
