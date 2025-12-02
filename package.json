@@ -1,6 +1,6 @@
 {
   "name": "vue3-migration-tool",
-  "version": "1.1.3",
+  "version": "1.1.4",
   "description": "AI-powered Vue 2 to Vue 3 migration tool with Vuetify 3 support",
   "type": "module",
   "keywords": [
