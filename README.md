@@ -41,7 +41,7 @@ Create a `.env` file in your project root or export variables:
 ```bash
 OPENAI_API_KEY=sk-...
 OPENAI_BASE_URL=https://api.openai.com/v1
-OPENAI_MODEL=gpt-5
+OPENAI_MODEL=gpt-4o-mini
 OPENAI_RATE_INPUT_PER1K=0.006
 OPENAI_RATE_OUTPUT_PER1K=0.018
 ```
@@ -55,12 +55,14 @@ OPENAI_RATE_OUTPUT_PER1K=0.018
 ### Using CLI Flags
 
 ```bash
-# Custom rules via flag
+# Custom rules overlay via flag
 vue3-migrate --rules ./my-rules.md
 
 # Combine with other options
 vue3-migrate ai src/ --rules ./company-rules.md --mode ask
 ```
+
+Built-in migration rules are always loaded first. If you pass `--rules` or set `MIGRATION_RULES_PATH`, that file is appended as a project-specific overlay so you can define your own HTTP/i18n/component conventions without replacing the generic defaults.
 
 ## Usage
 
@@ -130,7 +132,7 @@ Options:
 - `--dry-run` - Preview changes without writing files
 - `--no-compat` - Don't add @vue/compat migration build
 - `--yes` - Non-interactive mode
-- `--rules <path>` - Path to custom MIGRATION_RULES.md
+- `--rules <path>` - Path to custom MIGRATION_RULES.md overlay
 - `--skip <steps>` - Skip steps (comma-separated)
 - `--only <steps>` - Only run these steps
 - `-h, --help` - Show help
@@ -205,11 +207,15 @@ vue3-migrate ai src/components/dashboard/ --commit
 ### Custom Rules
 
 ```bash
-# Copy built-in rules
-cp node_modules/vue3-migration-tool/MIGRATION_RULES.md ./my-rules.md
+# Create a small overlay with your project-specific conventions
+cat > ./my-rules.md <<'EOF'
+## Project Overrides
+- Use `useApiClient()` from `@/composables/api` for HTTP access in migrated files.
+- Preserve the existing translation helper and do not introduce `useI18n()` directly.
+EOF
 
-# Edit and use
-vue3-migrate --rules ./my-rules.md ai src/
+# Apply the built-in generic rules plus your overlay
+vue3-migrate ai src/ --rules ./my-rules.md
 ```
 
 ## Troubleshooting
@@ -232,7 +238,7 @@ The tool automatically retries with `--legacy-peer-deps`.
 
 **AI producing incorrect code**
 - Use better model: `export OPENAI_MODEL="gpt-4o"`
-- Add custom rules to MIGRATION_RULES.md
+- Add project-specific conventions via `--rules` or `MIGRATION_RULES_PATH`
 - Use `--mode ask` or `--mode report` for review
 
 **Vuetify migrations incomplete**
@@ -271,11 +277,11 @@ The tool automatically retries with `--legacy-peer-deps`.
 | Variable | Required | Description | Default |
 |----------|----------|-------------|---------|
 | `OPENAI_API_KEY` | Yes (for AI) | OpenAI API key | - |
-| `OPENAI_MODEL` | No | Model to use | `gpt-5` |
+| `OPENAI_MODEL` | No | Model to use | `gpt-4o-mini` |
 | `OPENAI_BASE_URL` | No | API endpoint URL | `https://api.openai.com/v1` |
 | `OPENAI_RATE_INPUT_PER1K` | No | Input cost per 1K tokens (USD) | Auto-detect |
 | `OPENAI_RATE_OUTPUT_PER1K` | No | Output cost per 1K tokens (USD) | Auto-detect |
-| `MIGRATION_RULES_PATH` | No | Path to custom rules file | Built-in |
+| `MIGRATION_RULES_PATH` | No | Path to custom rules overlay file | None |
 | `AI_RULES_MODE` | No | Rules mode: `smart` or `full` | `smart` |
 | `AI_MAX_SOURCE_LINES` | No | Skip sending files above this line count to the AI | `800` |
 
@@ -283,10 +289,10 @@ The tool automatically retries with `--legacy-peer-deps`.
 ```bash
 OPENAI_API_KEY=sk-...
 OPENAI_BASE_URL=https://api.openai.com/v1
-OPENAI_MODEL=gpt-5
+OPENAI_MODEL=gpt-4o-mini
 OPENAI_RATE_INPUT_PER1K=0.006
 OPENAI_RATE_OUTPUT_PER1K=0.018
-MIGRATION_RULES_PATH=./MIGRATION_RULES.md   # optional custom rules file
+MIGRATION_RULES_PATH=./MIGRATION_RULES.md   # optional custom rules overlay file
 AI_RULES_MODE=smart                         # or "full" to send all rules
 AI_MAX_SOURCE_LINES=800                     # skip files over this line count for AI
 ```

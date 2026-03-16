@@ -72,11 +72,13 @@ export OPENAI_MODEL="gpt-4-turbo"
 
 #### `MIGRATION_RULES_PATH`
 
-Path to your custom migration rules file.
+Path to your custom migration rules overlay file.
 
 ```bash
 export MIGRATION_RULES_PATH="./my-migration-rules.md"
 ```
+
+The built-in rules shipped with the package are always loaded first. This file is appended after the built-in rules so you can add project-specific conventions without replacing the generic base prompt.
 
 **Alternative:** Use `--rules` CLI flag:
 ```bash
@@ -202,40 +204,32 @@ The package includes comprehensive rules covering:
 
 ### Rules Discovery
 
-The tool searches for rules in this order:
+The tool builds the AI prompt from two sources:
 
-1. **CLI flag** (highest priority)
-   ```bash
-   vue3-migrate --rules ./custom-rules.md
-   ```
-
-2. **Environment variable**
-   ```bash
-   export MIGRATION_RULES_PATH="./custom-rules.md"
-   ```
-
-3. **Project root**
-   ```
-   ./MIGRATION_RULES.md
-   ```
-
-4. **Legacy location**
-   ```
-   ./migrate-tool/MIGRATION_RULES.md
-   ```
-
-5. **Built-in** (fallback)
+1. **Built-in rules** (always loaded)
    ```
    node_modules/vue3-migration-tool/MIGRATION_RULES.md
    ```
 
+2. **Optional custom overlay** via CLI flag
+   ```bash
+   vue3-migrate --rules ./custom-rules.md
+   ```
+
+3. **Optional custom overlay** via environment variable
+   ```bash
+   export MIGRATION_RULES_PATH="./custom-rules.md"
+   ```
+
+If both `--rules` and `MIGRATION_RULES_PATH` are provided, the CLI flag wins.
+
 ### Creating Custom Rules
 
-#### Step 1: Copy Built-in Rules
+#### Step 1: Create a Small Overlay File
 
 ```bash
-# Create base from built-in rules
-cp node_modules/vue3-migration-tool/MIGRATION_RULES.md ./MIGRATION_RULES.md
+# Keep this file focused on project-specific conventions
+touch ./MIGRATION_RULES.md
 ```
 
 #### Step 2: Add Custom Patterns
@@ -247,39 +241,27 @@ Edit `MIGRATION_RULES.md`:
 
 ### Authentication Helpers
 
-Replace direct auth imports with company composables:
-
-**Before (Vue 2):**
-```typescript
-import { getToken } from '@/utils/auth'
-const token = getToken()
-```
-
-**After (Vue 3):**
-```typescript
-import { useAuth } from '@/composables/useAuth'
-const { token } = useAuth()
-```
+- Replace direct auth imports with `useAuth()` from `@/composables/useAuth`.
 
 ### API Client
 
-Use company API client composable:
-
-**Before:**
-```typescript
-import axios from 'axios'
-const response = await axios.get('/api/users')
+- Use `useApiClient()` from `@/composables/useApiClient` instead of direct `axios` imports.
 ```
 
-**After:**
-```typescript
-import { useApiClient } from '@/composables/useApiClient'
-const api = useApiClient()
-const response = await api.get('/users')
-```
+#### Step 3: Run With the Overlay
+
+```bash
+vue3-migrate ai src/ --rules ./MIGRATION_RULES.md
 ```
 
-#### Step 3: Test Rules
+### Overlay Best Practices
+
+- Keep the custom file short and project-specific.
+- Use it for local conventions like auth, HTTP, i18n, analytics, store wrappers, or internal component adapters.
+- Do not copy the entire built-in rules file unless you intentionally want to maintain a fork of the default guidance.
+- When a custom overlay conflicts with the built-in defaults, the custom overlay should be considered authoritative.
+
+#### Step 4: Test Rules
 
 ```bash
 # Test on one file
@@ -655,7 +637,8 @@ vue3-migrate ai --rules ./MIGRATION_RULES.md --dry-run
 
 **The tool will show:**
 ```
-📖 Using migration rules: MIGRATION_RULES.md
+📖 Loaded built-in migration rules
+📖 Loaded custom migration rules overlay: /absolute/path/to/MIGRATION_RULES.md
 ```
 
 ### Model Not Available

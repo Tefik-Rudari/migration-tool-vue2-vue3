@@ -85,6 +85,10 @@ function extractSmartRules(rulesText: string, filePath: string): string {
   return result.length > MAX ? result.slice(0, MAX) : result;
 }
 
+function readRulesFile(filePath: string): string {
+  return fs.readFileSync(filePath, "utf8");
+}
+
 // Rough cost estimator per 1k tokens (adjust as needed for your account/pricing)
 function estimateCost(model: string, promptTokens: number, completionTokens: number) {
   // Optional env overrides (USD per 1k tokens)
@@ -135,61 +139,67 @@ export async function aiRewriteFile(
     ? input.code.slice(0, MAX_CHARS) + "\n/* ...file truncated for AI... */"
     : input.code;
 
-  // Rules discovery:
-  // 1. If --rules flag or MIGRATION_RULES_PATH env var → use that (explicit = custom)
-  // 2. Otherwise → use built-in rules (default)
+  // Prompt composition:
+  // 1. Always load the built-in generic rules shipped with the package.
+  // 2. If --rules or MIGRATION_RULES_PATH is provided, append that file as a
+  //    project-specific overlay instead of replacing the built-in rules.
   const builtInRulesPath = path.resolve(__dirname, '../../MIGRATION_RULES.md');
-
-  let rulesText = '';
-  let rulesPath = '';
-  let isCustom = false;
-
-  // Check for explicitly specified custom rules
   const customRulesPath = ctx.rulesPath || process.env.MIGRATION_RULES_PATH;
+  let builtInRulesText = "";
+  let customRulesText = "";
 
-  if (customRulesPath) {
-    // User explicitly specified custom rules
-    try {
-      rulesText = fs.readFileSync(customRulesPath, 'utf8');
-      rulesPath = customRulesPath;
-      isCustom = true;
-      console.log(`📖 Using custom migration rules: ${path.resolve(rulesPath)}`);
-    } catch (err) {
-      console.warn(`⚠️  Custom rules file not found: ${customRulesPath}`);
-      console.log('📖 Falling back to built-in migration rules');
-      // Fall through to built-in
-    }
+  try {
+    builtInRulesText = readRulesFile(builtInRulesPath);
+    console.log("📖 Loaded built-in migration rules");
+  } catch {
+    console.warn("⚠️  Built-in migration rules not found. Using system prompt only.");
   }
 
-  // Use built-in rules (default)
-  if (!rulesText) {
+  if (customRulesPath) {
     try {
-      rulesText = fs.readFileSync(builtInRulesPath, 'utf8');
-      rulesPath = builtInRulesPath;
-      console.log('📖 Using built-in migration rules');
+      customRulesText = readRulesFile(customRulesPath);
+      console.log(`📖 Loaded custom migration rules overlay: ${path.resolve(customRulesPath)}`);
     } catch {
-      console.warn('⚠️  No migration rules found. Using built-in prompt only.');
+      console.warn(`⚠️  Custom rules file not found: ${customRulesPath}`);
     }
   }
 
   // Allow a lighter, faster prompt by sending a subset of the rules most relevant to the current file.
   // Set AI_RULES_MODE=full to send the entire file.
   const rulesMode = (process.env.AI_RULES_MODE || 'smart').toLowerCase();
-  const rulesForPrompt = rulesMode === 'full' ? rulesText : extractSmartRules(rulesText, input.filePath);
+  const builtInRulesForPrompt =
+    rulesMode === "full"
+      ? builtInRulesText
+      : extractSmartRules(builtInRulesText, input.filePath);
+
+  // Keep custom overlays intact so project-specific instructions are never dropped
+  // by the smart section extractor.
+  const rulesSections = [
+    builtInRulesForPrompt.trim(),
+    customRulesText.trim()
+      ? [
+          "## Custom project overrides",
+          "These rules are user-supplied and take precedence when they conflict with the built-in defaults.",
+          "",
+          customRulesText.trim(),
+        ].join("\n")
+      : "",
+  ].filter(Boolean);
+  const rulesForPrompt = rulesSections.join("\n\n");
 
   const system = [
     rulesForPrompt ? `PROJECT RULES:\n${rulesForPrompt}` : '',
-    'You are a senior Vue engineer. Rewrite ONE file so it compiles on Vue 3 + Vuetify 3 with identical behavior.',
-    'Update BOTH the <script> logic and the Vue template to Vuetify 3 equivalents where needed.',
+    'You are a senior Vue engineer. Rewrite ONE file so it compiles on Vue 3 and, when applicable, Vuetify 3 with identical behavior.',
+    'Update BOTH the <script> logic and template when the migration requires it.',
     'Make the smallest correct change. Keep business logic and types. If uncertain, add a short // TODO and proceed.',
     '',
     'Required migrations:',
     '- Use <script setup lang=\'ts\'> Composition API (no vue-class-component / vue-property-decorator).',
     '- Vue 3 core: new Vue()->createApp; Vue.use()->app.use; lifecycle beforeDestroy/destroyed->beforeUnmount/unmounted; v-model/.sync -> v-model[:arg] + defineEmits; modern slot syntax.',
     '- Emits: previous $emit(\'input\', x) -> modelValue + emit(\'update:modelValue\', x); type emits.',
-    "- i18n: use our useT() composable from '@/composables/useGlobals'. Do not import useI18n. Do not access $t via getCurrentInstance().",
+    "- Preserve the file's existing i18n approach unless the project rules explicitly require a different migration target.",
     '- Router: use useRouter()/useRoute() and router.currentRoute.value.',
-    "- Axios: use useAxios() from '@/composables/useGlobals'. Do not import axios and do not call axios.create().",
+    "- Preserve the file's existing HTTP client/integration unless the project rules explicitly require a different adapter.",
     '- Import hygiene: every referenced symbol must be imported; never use global Vue.*.',
     '',
     'Vuetify 3 specifics (do not use V2 APIs):',

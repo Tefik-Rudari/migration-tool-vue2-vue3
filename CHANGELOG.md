@@ -83,10 +83,11 @@ All notable changes to the Vue 2 → Vue 3 Migration Tool.
 - AI codemods now short-circuit with a clear warning if `OPENAI_API_KEY` is missing.
 - AI verifier is skipped automatically when `tools/verify-migration.mjs` is not present in the target project.
 - `AI_MAX_SOURCE_LINES` env var to adjust the file size threshold (default 800 lines) before sending a component to the AI.
+- Custom migration rules now work as an explicit overlay on top of the built-in rules instead of replacing them.
 
 ### Changed
 - AI codemods are auto-skipped when earlier steps fail in non-interactive mode; interactive runs can still choose to proceed after a failure warning.
-- Migration rules and AI goals were generalized to avoid project-specific HTTP/i18n assumptions (no enforced custom wrappers).
+- Built-in migration rules and the default AI system prompt were generalized further to remove project-specific HTTP/i18n/component assumptions from the published package.
 - Documented current limitations in README (router/main entry, non-Vue TS/JS files, configs remain manual) and added a callout near quick start pointing readers to the scope/limitations sections.
 - Clarified AI goal wording to emphasize using existing HTTP/i18n approaches without implying custom wrappers.
 
@@ -101,7 +102,7 @@ If you were using an earlier version:
 
 1. **Update command name**: `v23-migrate` → `vue3-migrate`
 2. **New CLI flags available**: Use `--skip`, `--only`, `--rules`
-3. **Custom rules**: Place `MIGRATION_RULES.md` in project root or use `--rules` flag
+3. **Custom rules**: Use `--rules` or `MIGRATION_RULES_PATH` to add a project-specific rules overlay
 4. **Environment**: Set `OPENAI_MODEL` to choose AI model
 
 ### Breaking Changes

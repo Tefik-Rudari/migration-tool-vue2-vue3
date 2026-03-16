@@ -94,13 +94,13 @@ Note: In Incremental mode, keep V2 template APIs (e.g., `item-text`, `outlined`,
 - Type directive hooks: `mounted(el: HTMLElement, binding: DirectiveBinding)`.
 - Avoid `any` by augmenting the host element type when you stash instances, e.g. `type Host = HTMLElement & { __inst__?: T }`.
 - Prefer correct CSS selectors (e.g., `.foo:hover`, not `.foo :hover`).
- - Use the local adapter `@/components/pdf/PdfEmbed.vue` when rendering PDFs so slot names remain compatible with existing templates.
+ - If the project already wraps PDF rendering in a local adapter component, preserve that adapter instead of introducing a new PDF library during migration.
 
 ## v-model & emits mapping
 - Replace `.sync` with `v-model` / `v-model:prop`.
 - Replace `$emit('input', v)` with `modelValue` + `emit('update:modelValue', v)` when the pattern applies.
 - Use typed emits: `const emit = defineEmits<{ (e: 'save', p: Payload): void }>()`.
- - Do not rename prop/event pairs that parents depend on without updating all usages in the same change (e.g., keep `value` + `update:modelValue` in BillingFilter.vue when only migrating that file).
+ - Do not rename prop/event pairs that parents depend on without updating all usages in the same change (for example, keep an existing `value` prop stable if parent components still depend on it).
 
 ## Cleanup & side effects
 - Cancel in‑flight requests on unmount (prefer `AbortController`; if the codebase still uses Axios CancelToken, keep behavior but add a TODO to migrate).

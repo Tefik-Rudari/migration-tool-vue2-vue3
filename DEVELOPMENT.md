@@ -336,27 +336,26 @@ const files = await globby(targets, {
 
 ```typescript
 // src/core/ai.ts
-// Tries multiple paths
-const possiblePaths = [
-  ctx.rulesPath,                    // --rules flag
-  process.env.MIGRATION_RULES_PATH, // env var
-  path.resolve(process.cwd(), 'MIGRATION_RULES.md'), // project root
-  path.resolve(__dirname, '../../MIGRATION_RULES.md') // built-in
-];
+const builtInRulesPath = path.resolve(__dirname, "../../MIGRATION_RULES.md");
+const customRulesPath = ctx.rulesPath || process.env.MIGRATION_RULES_PATH;
+
+const builtInRules = readRulesFile(builtInRulesPath);
+const customRules = customRulesPath ? readRulesFile(customRulesPath) : "";
 ```
 
 **3. Build Prompt**
 
 ```typescript
 const system = [
-  `PROJECT RULES:\n${rulesText}`,
+  `PROJECT RULES:\n${builtInRules}\n\n${customRules}`,
   'You are a senior Vue engineer...',
-  'Update BOTH script and template...',
-  // Specific migrations
+  "Preserve the file's existing HTTP/i18n approach unless custom rules override it.",
 ].join('\n');
 
 const user = `File: ${input.filePath}\n\n${input.code}`;
 ```
+
+The built-in rules are intentionally generic. Project-specific behavior should come from the optional custom overlay file passed with `--rules` or `MIGRATION_RULES_PATH`.
 
 **4. Call OpenAI API**
 
